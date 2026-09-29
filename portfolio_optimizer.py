@@ -1,5 +1,4 @@
 # Portfolio Analytics & Optimization Toolkit
-# Built on top of the original stock tracker + correlation viewer projects
 #Sneha Anudeep verma 
 
 import yfinance as yf
@@ -11,9 +10,9 @@ from scipy.optimize import minimize
 
 stock_data_cache = {}
 
-TICKERS = ["AAPL", "DIS", "NVDA", "JPM", "PG"] #the stock tickers be
+TICKERS = ["AAPL", "DIS", "NVDA", "JPM", "PG"] #the stock tickers 
 
-#gets stock history for a 6 month period 
+#gets stock history for a 2 year  period 
 def get_stock_history(ticker, period="2y"):
     """Gets price history for a ticker, using a cached copy if already fetched."""
     if ticker in stock_data_cache:
@@ -27,18 +26,18 @@ def get_stock_history(ticker, period="2y"):
 def get_stock_history_close(ticker, period="2y"):
     """Gets the Close price history of the chosen stock."""
     data = get_stock_history(ticker, period) #calls on history function 
-    return data["Close"]#returns the close row of the data frame 
+    return data["Close"]#returns the close column of the data frame 
 
 
 def get_daily_percent_change(ticker):
     """Calculates the day-over-day percent change (daily returns)."""
-    return get_stock_history_close(ticker).pct_change() #uses the percent change function on the close row 
+    return get_stock_history_close(ticker).pct_change() #uses the percent change function on the close column 
 
 
 def get_combined_returns(tickers):
     """Combines daily returns for multiple tickers into one aligned DataFrame."""
     returns_dict = {ticker: get_daily_percent_change(ticker) for ticker in tickers} #get percent change for every ticker in the list 
-    return pd.concat(returns_dict, axis=1, sort=False).dropna() #removes the NAN values and moves the values one row up 
+    return pd.concat(returns_dict, axis=1, sort=False).dropna() #removes the NAN values and deletes the row  
 
 
 def get_correlation_matrix(tickers):
@@ -62,9 +61,9 @@ def get_annualized_stats(tickers, risk_free_rate=0.04):
     covariance_matrix: how the stocks move together, annualized
     """
     returns = get_combined_returns(tickers) #combined daily returns is fetched 
-    expected_returns = returns.mean() * 252 #multiplies by 252 to get annulizes value 
-    cov_matrix = returns.cov() * 252 #covariance functino used 
-    return expected_returns, cov_matrix #returns both so multiple functions dont need to be made 
+    expected_returns = returns.mean() * 252 #multiplies by 252 to get annulized value 
+    cov_matrix = returns.cov() * 252 #covariance function used 
+    return expected_returns, cov_matrix #returns both so multiple functions don't need to be made 
 
 
 def portfolio_performance(weights, expected_returns, cov_matrix, risk_free_rate=0.04):
@@ -72,12 +71,12 @@ def portfolio_performance(weights, expected_returns, cov_matrix, risk_free_rate=
     
     port_return = np.dot(weights, expected_returns) #uses the dot product to give you a predicted return
     
-    #squarreroots the dot prodoct if the weights matrix flipped and the dor product of the covvarience and weights.
+    #square roots the dot prodoct if the weights matrix flipped and the dor product of the covvarience and weights.
     
-    #np.dot(cov_matrix, weights) returns an array -- so you have to .T the weights othereise it would break because of matrix multiplcation 
+    #np.dot(cov_matrix, weights) returns an array -- so you have to .T because the transpose is used in the formula 
     port_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
     
-    sharpe = (port_return - risk_free_rate) / port_volatility #calculates sharpe value for whole portfolio (its an average basically)
+    sharpe = (port_return - risk_free_rate) / port_volatility #calculates sharpe value for whole portfolio (its an ratio basically)
     return port_return, port_volatility, sharpe
 
 
@@ -122,7 +121,7 @@ def optimize_portfolio(tickers, risk_free_rate=0.04):
     
     port_return, port_vol, sharpe = portfolio_performance(
         optimal_weights, expected_returns, cov_matrix, risk_free_rate
-    ) #uses optimal solution, the cov_matrox and expected returns for the whole portfolio to calculate the performance 
+    ) #uses optimal solution, the cov_matrix and expected returns for the whole portfolio to calculate the performance 
 
     return optimal_weights, port_return, port_vol, sharpe
 
